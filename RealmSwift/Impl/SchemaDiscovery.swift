@@ -72,7 +72,7 @@ public extension RLMProperty {
         self.name = name
         self.type = type._rlmType
         self.optional = type._rlmOptional
-        self.indexed = indexed
+        self.indexed = indexed || primaryKey
         self.isPrimary = primaryKey
         self.linkOriginPropertyName = originProperty
         type._rlmPopulateProperty(self)
@@ -85,7 +85,7 @@ public extension RLMProperty {
         self.name = name
         self.type = U._rlmType
         self.optional = U._rlmOptional
-        self.indexed = indexed
+        self.indexed = indexed || primaryKey
         self.isPrimary = primaryKey
         self.linkOriginPropertyName = originProperty
         U._rlmPopulateProperty(self)
@@ -98,7 +98,7 @@ public extension RLMProperty {
         self.name = name
         self.type = U._rlmType
         self.optional = U._rlmOptional
-        self.indexed = indexed
+        self.indexed = indexed || primaryKey
         self.isPrimary = primaryKey
         self.linkOriginPropertyName = originProperty
         U._rlmPopulateProperty(self)

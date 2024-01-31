@@ -21,6 +21,8 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-syntax.git", from: "509.1.1"),
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.15.2"),
         .package(url: "https://github.com/pointfreeco/swift-macro-testing", from: "0.2.2"),
+        .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.1.2"),
+        .package(path: "../"), // local 'realm-swift'
     ],
     targets: [
         .macro(
@@ -31,7 +33,13 @@ let package = Package(
             ]
         ),
         .target(name: "RealmMacro", dependencies: ["RealmMacroMacros"]),
-        .executableTarget(name: "RealmMacroClient", dependencies: ["RealmMacro"]),
+        .executableTarget(
+            name: "RealmMacroClient",
+            dependencies: [
+                "RealmMacro",
+                .product(name: "RealmSwift", package: "realm-swift"),
+            ]
+        ),
         .testTarget(
             name: "RealmMacroTests",
             dependencies: [
@@ -40,6 +48,8 @@ let package = Package(
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
                 .product(name: "InlineSnapshotTesting", package: "swift-snapshot-testing"),
                 .product(name: "MacroTesting", package: "swift-macro-testing"),
+                .product(name: "CustomDump", package: "swift-custom-dump"),
+                .product(name: "RealmSwift", package: "realm-swift"),
             ]
         ),
     ]
