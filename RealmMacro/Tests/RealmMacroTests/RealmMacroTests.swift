@@ -3,6 +3,8 @@ import SwiftSyntaxMacrosTestSupport
 import XCTest
 //import RealmMacroMacros
 import SwiftCompilerPlugin
+import SnapshotTesting
+import InlineSnapshotTesting
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
@@ -10,6 +12,9 @@ import SwiftParser
 import SwiftBasicFormat
 
 final class RealmMacroTests: XCTestCase {
+    func testSnapshot() {
+        XCTFail()
+    }
 //    func _testStuff() {
 //        assertMacroExpansion(
 //            #"""

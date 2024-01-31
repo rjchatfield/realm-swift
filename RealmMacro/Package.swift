@@ -18,7 +18,8 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-syntax.git", branch: "release/5.9")
+        .package(url: "https://github.com/apple/swift-syntax.git", from: "509.1.1"),
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.15.2"),
     ],
     targets: [
         .macro(
@@ -35,6 +36,8 @@ let package = Package(
             dependencies: [
                 "RealmMacroMacros",
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
+                .product(name: "InlineSnapshotTesting", package: "swift-snapshot-testing"),
             ]
         ),
     ]

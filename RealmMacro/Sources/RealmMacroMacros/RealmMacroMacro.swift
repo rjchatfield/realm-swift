@@ -76,11 +76,25 @@ enum RealmSchemaDiscoveryError: CustomStringConvertible, Error {
     }
 }
 
-public struct RealmSchemaDiscovery: MemberMacro, ConformanceMacro {
+public struct RealmSchemaDiscovery {}
+
+extension RealmSchemaDiscovery: ExtensionMacro {
     public static func expansion(
+      of node: AttributeSyntax,
+      attachedTo declaration: some DeclGroupSyntax,
+      providingExtensionsOf type: some TypeSyntaxProtocol,
+      conformingTo protocols: [TypeSyntax],
+      in context: some MacroExpansionContext
+    ) throws -> [ExtensionDeclSyntax] {
+        []
+    }
+}
+
+extension RealmSchemaDiscovery: MemberMacro {
+    static func expansion(
         of node: AttributeSyntax,
         providingConformancesOf declaration: some DeclGroupSyntax,
-        in context: some MacroExpansionContext
+        in context: some SwiftSyntaxMacros.MacroExpansionContext
     ) throws -> [(TypeSyntax, GenericWhereClauseSyntax?)] {
         return [(TypeSyntax("RealmSwift._RealmObjectSchemaDiscoverable"), nil)]
     }
@@ -91,15 +105,15 @@ public struct RealmSchemaDiscovery: MemberMacro, ConformanceMacro {
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
         guard let declaration = declaration.as(ClassDeclSyntax.self) else { fatalError() }
-        let className = declaration.identifier
+        let className = declaration.name
         let properties = try declaration.memberBlock.members.compactMap { (decl) -> (String, String, AttributeSyntax)? in
             guard let property = decl.decl.as(VariableDeclSyntax.self), property.bindings.count == 1 else {
                 return nil
             }
-            guard let attributes = property.attributes else { return nil }
+            let attributes = property.attributes
             let persistedAttr = attributes.compactMap { attr in
                 if case let .attribute(attr) = attr {
-                    if attr.attributeName.as(SimpleTypeIdentifierSyntax.self)?.name.text == "Persisted" {
+                    if attr.attributeName.as(IdentifierTypeSyntax.self)?.name.text == "Persisted" {
                         return attr
                     }
                 }
@@ -121,11 +135,12 @@ public struct RealmSchemaDiscovery: MemberMacro, ConformanceMacro {
             let expr = ExprSyntax("RLMProperty(name: \(literal: name), type: \(raw: type).self, keyPath: \\\(className).\(raw: name))")
             var functionCall = expr.as(FunctionCallExprSyntax.self)!
 
-            if let argument = persistedAttr.argument, case let .argumentList(argList) = argument {
-                var argumentList = Array(functionCall.argumentList)
+            if let arguments = persistedAttr.arguments,
+               case let .argumentList(argList) = arguments {
+                var argumentList = Array(functionCall.arguments)
                 argumentList[argumentList.count - 1].trailingComma = ", "
                 argumentList.append(contentsOf: argList)
-                functionCall.argumentList = TupleExprElementListSyntax(argumentList)
+                functionCall.arguments = LabeledExprListSyntax(argumentList)
             }
             return functionCall.as(ExprSyntax.self)!
         }
