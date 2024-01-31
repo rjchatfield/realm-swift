@@ -1,6 +1,6 @@
 @attached(extension)
 @attached(member, names: named(_realmProperties))
-public macro RealmSchemaDiscovery() = #externalMacro(module: "RealmMacroMacros", type: "RealmSchemaDiscovery")
+public macro RealmSchemaDiscovery() = #externalMacro(module: "RealmMacroMacros", type: "RealmSchemaDiscoveryImpl")
 
 //@attached(conformance)
 //@attached(member, names: named(_realmProperties), named(_realmUnmanagedStorage))

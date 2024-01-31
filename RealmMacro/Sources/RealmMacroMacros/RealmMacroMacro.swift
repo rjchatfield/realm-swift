@@ -6,7 +6,7 @@ import SwiftSyntaxMacros
 @main
 struct RealmMacroPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
-        RealmSchemaDiscovery.self,
+        RealmSchemaDiscoveryImpl.self,
 //        RealmObjectMacro.self,
 //        RealmObjectMacro2.self,
 //        Marker.self,
@@ -76,9 +76,9 @@ enum RealmSchemaDiscoveryError: CustomStringConvertible, Error {
     }
 }
 
-public struct RealmSchemaDiscovery {}
+public struct RealmSchemaDiscoveryImpl {}
 
-extension RealmSchemaDiscovery: ExtensionMacro {
+extension RealmSchemaDiscoveryImpl: ExtensionMacro {
     public static func expansion(
       of node: AttributeSyntax,
       attachedTo declaration: some DeclGroupSyntax,
@@ -90,7 +90,7 @@ extension RealmSchemaDiscovery: ExtensionMacro {
     }
 }
 
-extension RealmSchemaDiscovery: MemberMacro {
+extension RealmSchemaDiscoveryImpl: MemberMacro {
     static func expansion(
         of node: AttributeSyntax,
         providingConformancesOf declaration: some DeclGroupSyntax,
@@ -144,13 +144,14 @@ extension RealmSchemaDiscovery: MemberMacro {
             }
             return functionCall.as(ExprSyntax.self)!
         }
+        let arrSyntax = rlmProperties
+            .map { "\t" + ArrayElementSyntax(expression: $0).description + "," }
+            .joined(separator: "\n")
         return ["""
 
-        static var _realmProperties: [RLMProperty] = \(ArrayExprSyntax {
-            for property in rlmProperties {
-                ArrayElementSyntax(expression: property)
-            }
-            })
+        static var _realmProperties: [RLMProperty] = [
+        \(raw: arrSyntax)
+        ]
         """]
     }
 }
