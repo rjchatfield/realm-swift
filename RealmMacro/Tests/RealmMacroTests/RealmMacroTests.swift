@@ -5,7 +5,7 @@ import XCTest
 final class RealmMacroTests: XCTestCase {
     override func invokeTest() {
         withMacroTesting(
-//            isRecording: true,
+            isRecording: true,
             macros: [
                 "RealmSchemaDiscovery": RealmSchemaDiscoveryImpl.self,
             ]
@@ -36,11 +36,13 @@ final class RealmMacroTests: XCTestCase {
                 var computed: String { "" }
                 func method() {}
 
-                static var _realmProperties: [RLMProperty] = [
-                	RLMProperty(name: "id", type: String.self, keyPath: \FooObject.id, primaryKey: true),
-                	RLMProperty(name: "name", type: String.self, keyPath: \FooObject.name),
-                	RLMProperty(name: "key", type: String.self, keyPath: \FooObject.key, indexed: true),
-                ]
+                static var _realmProperties: [RLMProperty] {
+                    return [
+                		RLMProperty(name: "id", type: String.self, keyPath: \FooObject.id, primaryKey: true),
+                		RLMProperty(name: "name", type: String.self, keyPath: \FooObject.name),
+                		RLMProperty(name: "key", type: String.self, keyPath: \FooObject.key, indexed: true),
+                    ]
+                }
             }
             """#
         }

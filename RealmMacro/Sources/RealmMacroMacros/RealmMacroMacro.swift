@@ -145,13 +145,15 @@ extension RealmSchemaDiscoveryImpl: MemberMacro {
             return functionCall.as(ExprSyntax.self)!
         }
         let arrSyntax = rlmProperties
-            .map { "\t" + ArrayElementSyntax(expression: $0).description + "," }
+            .map { "\t\t" + ArrayElementSyntax(expression: $0).description + "," }
             .joined(separator: "\n")
         return ["""
 
-        static var _realmProperties: [RLMProperty] = [
+        static var _realmProperties: [RLMProperty] {
+            return [
         \(raw: arrSyntax)
-        ]
+            ]
+        }
         """]
     }
 }
