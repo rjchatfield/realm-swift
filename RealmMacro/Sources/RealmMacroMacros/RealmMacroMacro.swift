@@ -65,6 +65,7 @@ struct RealmMacroPlugin: CompilerPlugin {
 enum RealmSchemaDiscoveryError: CustomStringConvertible, Error {
     case missingTypeAnnotation
     case noProperties
+    case notAClass
 
     var description: String {
         switch self {
@@ -72,6 +73,8 @@ enum RealmSchemaDiscoveryError: CustomStringConvertible, Error {
             return "@RealmSchemaDiscovery requires an explicit type annotation for all @Persisted properties and cannot infer the type from the default value"
         case .noProperties:
             return "No properties found in @RealmModel class. All object types must have at least one persisted property."
+        case .notAClass:
+            return "Only works with Object classes"
         }
     }
 }
@@ -86,8 +89,16 @@ extension RealmSchemaDiscoveryImpl: ExtensionMacro {
       conformingTo protocols: [TypeSyntax],
       in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
-        //        []
-        guard let declaration = declaration.as(ClassDeclSyntax.self) else { fatalError() }
+        guard let declaration = declaration.as(ClassDeclSyntax.self) else {
+            throw RealmSchemaDiscoveryError.notAClass
+        }
+        let ext = try conformanceExpansion(declaration: declaration)
+        return [ext.cast(ExtensionDeclSyntax.self)]
+    }
+
+    private static func conformanceExpansion(
+        declaration: ClassDeclSyntax
+    ) throws -> DeclSyntax {
         let accessModifier = if declaration.modifiers.contains(where: { $0.name.tokenKind == .keyword(.public) }) { "public " } else { "" }
         let className = declaration.name
         let properties = try declaration.memberBlock.members.compactMap { (decl) -> (String, String, AttributeSyntax)? in
@@ -132,8 +143,8 @@ extension RealmSchemaDiscoveryImpl: ExtensionMacro {
             .map { "\t\t\t" + ArrayElementSyntax(expression: $0).description + "," }
             .joined(separator: "\n")
 
-        let ext: DeclSyntax = """
-        extension \(type.trimmed): RealmSwift._RealmObjectSchemaDiscoverable {
+        return """
+        extension \(declaration.name): RealmSwift._RealmObjectSchemaDiscoverable {
             \(raw: accessModifier)static var _realmProperties: [RealmSwift.Property]? {
                 guard RealmMacroConstants.schemaDiscoveryEnabled else { return nil }
                 return [
@@ -142,7 +153,6 @@ extension RealmSchemaDiscoveryImpl: ExtensionMacro {
             }
         }
         """
-        return [ext.cast(ExtensionDeclSyntax.self)]
     }
 }
 
