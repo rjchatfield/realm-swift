@@ -91,6 +91,44 @@ final class RealmMacroTests: XCTestCase {
         }
     }
 
+    func testSnapshotManualConformance() throws {
+        assertMacro {
+            """
+            @RealmSchemaDiscovery
+            public final class FooObject: Object {
+                @Persisted(primaryKey: true) var id: String
+                @Persisted var name: String
+            }
+            extension FooObject: RealmSwift._RealmObjectSchemaDiscoverable {
+                public static var _realmProperties: [RealmSwift.Property]? { nil }
+            }
+            """
+        } expansion: {
+            #"""
+            public final class FooObject: Object {
+                @Persisted(primaryKey: true) var id: String
+                @Persisted var name: String
+            }
+            extension FooObject: RealmSwift._RealmObjectSchemaDiscoverable {
+                public static var _realmProperties: [RealmSwift.Property]? { nil }
+            }
+
+            extension FooObject: RealmSwift._RealmObjectSchemaDiscoverable {
+                public static var _realmProperties: [RealmSwift.Property]? {
+                    guard RealmMacroConstants.schemaDiscoveryEnabled else {
+                        return nil
+                    }
+                    return [
+            			RealmSwift.Property(name: "id", type: String.self, keyPath: \FooObject.id, primaryKey: true),
+            			RealmSwift.Property(name: "name", type: String.self, keyPath: \FooObject.name),
+                    ]
+                }
+            }
+            """#
+        }
+        throw XCTSkip("TODO: No-op macro if Type already manually conforms to _RealmObjectSchemaDiscoverable")
+    }
+
     func testEquality() {
 //        InlineSnapshotTesting.isRecording = true
         RealmMacro.RealmMacroConstants.schemaDiscoveryEnabled = true
@@ -337,7 +375,7 @@ final class FooObject: Object {
     var computed: String { "" }
     func method() {}
 
-//    @RealmSchemaDiscovery
+    //@RealmSchemaDiscovery
     @objc(NestedObject)
     class NestedObject: Object {
         @Persisted(primaryKey: true) var id: String
