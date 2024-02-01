@@ -21,7 +21,7 @@ import Realm
 import Realm.Private
 
 public protocol _RealmObjectSchemaDiscoverable {
-    static var _realmProperties: [RLMProperty] { get }
+    static var _realmProperties: [RealmSwift.Property] { get }
 }
 
 // A type which we can get the runtime schema information from
@@ -66,46 +66,46 @@ internal extension RLMProperty {
     }
 }
 
-public extension RLMProperty {
-    convenience init<T: ObjectBase, U: _Persistable>(name: String, type: _RealmSchemaDiscoverable.Type, keyPath: KeyPath<T, U>, indexed: Bool = false, primaryKey: Bool = false, originProperty: String? = nil) {
-        self.init()
-        self.name = name
-        self.type = type._rlmType
-        self.optional = type._rlmOptional
-        self.indexed = indexed || primaryKey
-        self.isPrimary = primaryKey
-        self.linkOriginPropertyName = originProperty
-        type._rlmPopulateProperty(self)
-        U._rlmSetAccessor(self)
-        self.swiftIvar = ivar_getOffset(class_getInstanceVariable(T.self, "_" + name)!)
-    }
-
-    convenience init<T: ObjectBase, U: _Persistable>(name: String, keyPath: KeyPath<T, U>, indexed: Bool = false, primaryKey: Bool = false, originProperty: String? = nil) {
-        self.init()
-        self.name = name
-        self.type = U._rlmType
-        self.optional = U._rlmOptional
-        self.indexed = indexed || primaryKey
-        self.isPrimary = primaryKey
-        self.linkOriginPropertyName = originProperty
-        U._rlmPopulateProperty(self)
-        U._rlmSetAccessor(self)
-        self.swiftIvar = ivar_getOffset(class_getInstanceVariable(T.self, "_$" + name)!)
-    }
-
-    convenience init<T: ObjectBase, U: _Persistable>(name: String, index: Int, keyPath: KeyPath<T, U>, indexed: Bool = false, primaryKey: Bool = false, originProperty: String? = nil) {
-        self.init()
-        self.name = name
-        self.type = U._rlmType
-        self.optional = U._rlmOptional
-        self.indexed = indexed || primaryKey
-        self.isPrimary = primaryKey
-        self.linkOriginPropertyName = originProperty
-        U._rlmPopulateProperty(self)
-        U._rlmSetAccessor(self)
-        self.swiftIvar = -index
-    }
-}
+//public extension RLMProperty {
+//    convenience init<T: ObjectBase, U: _Persistable>(name: String, type: _RealmSchemaDiscoverable.Type, keyPath: KeyPath<T, U>, indexed: Bool = false, primaryKey: Bool = false, originProperty: String? = nil) {
+//        self.init()
+//        self.name = name
+//        self.type = type._rlmType
+//        self.optional = type._rlmOptional
+//        self.indexed = indexed || primaryKey
+//        self.isPrimary = primaryKey
+//        self.linkOriginPropertyName = originProperty
+//        type._rlmPopulateProperty(self)
+//        U._rlmSetAccessor(self)
+//        self.swiftIvar = ivar_getOffset(class_getInstanceVariable(T.self, "_" + name)!)
+//    }
+//
+//    convenience init<T: ObjectBase, U: _Persistable>(name: String, keyPath: KeyPath<T, U>, indexed: Bool = false, primaryKey: Bool = false, originProperty: String? = nil) {
+//        self.init()
+//        self.name = name
+//        self.type = U._rlmType
+//        self.optional = U._rlmOptional
+//        self.indexed = indexed || primaryKey
+//        self.isPrimary = primaryKey
+//        self.linkOriginPropertyName = originProperty
+//        U._rlmPopulateProperty(self)
+//        U._rlmSetAccessor(self)
+//        self.swiftIvar = ivar_getOffset(class_getInstanceVariable(T.self, "_$" + name)!)
+//    }
+//
+//    convenience init<T: ObjectBase, U: _Persistable>(name: String, index: Int, keyPath: KeyPath<T, U>, indexed: Bool = false, primaryKey: Bool = false, originProperty: String? = nil) {
+//        self.init()
+//        self.name = name
+//        self.type = U._rlmType
+//        self.optional = U._rlmOptional
+//        self.indexed = indexed || primaryKey
+//        self.isPrimary = primaryKey
+//        self.linkOriginPropertyName = originProperty
+//        U._rlmPopulateProperty(self)
+//        U._rlmSetAccessor(self)
+//        self.swiftIvar = -index
+//    }
+//}
 
 public func _getProperty<T: _Persistable>(_ obj: ObjectBase, _ index: Int) -> T {
     T._rlmGetProperty(obj, PropertyKey(index))
@@ -232,7 +232,7 @@ private func getLegacyProperties(_ object: ObjectBase, _ cls: ObjectBase.Type) -
 
 private func getProperties(_ cls: RLMObjectBase.Type) -> [RLMProperty] {
     if let cls = cls as? _RealmObjectSchemaDiscoverable.Type {
-        return cls._realmProperties
+        return cls._realmProperties.map(ObjectiveCSupport.convert(object:))
     }
 
     // Check for any modern properties and only scan for legacy properties if

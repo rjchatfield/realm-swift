@@ -10,7 +10,7 @@ import Realm
 final class RealmMacroTests: XCTestCase {
     override func invokeTest() {
         withMacroTesting(
-            isRecording: true,
+//            isRecording: true,
             macros: [
                 "RealmSchemaDiscovery": RealmSchemaDiscoveryImpl.self,
             ]
@@ -63,10 +63,10 @@ final class RealmMacroTests: XCTestCase {
                     @Persisted(primaryKey: true) var id: String
                     @Persisted var name2: String
 
-                    static var _realmProperties: [RLMProperty] {
+                    static var _realmProperties: [RealmSwift.Property] {
                         return [
-                    		RLMProperty(name: "id", type: String.self, keyPath: \NestedObject.id, primaryKey: true),
-                    		RLMProperty(name: "name2", type: String.self, keyPath: \NestedObject.name2),
+                    		RealmSwift.Property(name: "id", type: String.self, keyPath: \NestedObject.id, primaryKey: true),
+                    		RealmSwift.Property(name: "name2", type: String.self, keyPath: \NestedObject.name2),
                         ]
                     }
                 }
@@ -74,20 +74,20 @@ final class RealmMacroTests: XCTestCase {
                 class NestedEmbeddedObject: EmbeddedObject {
                     @Persisted var name3: String
 
-                    static var _realmProperties: [RLMProperty] {
+                    static var _realmProperties: [RealmSwift.Property] {
                         return [
-                    		RLMProperty(name: "name3", type: String.self, keyPath: \NestedEmbeddedObject.name3),
+                    		RealmSwift.Property(name: "name3", type: String.self, keyPath: \NestedEmbeddedObject.name3),
                         ]
                     }
                 }
 
-                static var _realmProperties: [RLMProperty] {
+                static var _realmProperties: [RealmSwift.Property] {
                     return [
-                		RLMProperty(name: "id", type: String.self, keyPath: \FooObject.id, primaryKey: true),
-                		RLMProperty(name: "name", type: String.self, keyPath: \FooObject.name),
-                		RLMProperty(name: "key", type: String.self, keyPath: \FooObject.key, indexed: true),
-                		RLMProperty(name: "nestedObject", type: NestedObject?.self, keyPath: \FooObject.nestedObject),
-                		RLMProperty(name: "embeddedObjects", type: List<NestedObject>.self, keyPath: \FooObject.embeddedObjects),
+                		RealmSwift.Property(name: "id", type: String.self, keyPath: \FooObject.id, primaryKey: true),
+                		RealmSwift.Property(name: "name", type: String.self, keyPath: \FooObject.name),
+                		RealmSwift.Property(name: "key", type: String.self, keyPath: \FooObject.key, indexed: true),
+                		RealmSwift.Property(name: "nestedObject", type: NestedObject?.self, keyPath: \FooObject.nestedObject),
+                		RealmSwift.Property(name: "embeddedObjects", type: List<NestedObject>.self, keyPath: \FooObject.embeddedObjects),
                     ]
                 }
             }
@@ -98,7 +98,7 @@ final class RealmMacroTests: XCTestCase {
     func testEquality() {
 //        InlineSnapshotTesting.isRecording = true
         
-        let macroGeneratedProperties = FooObject._realmProperties
+        let macroGeneratedProperties = FooObject._realmProperties.map(ObjectiveCSupport.convert(object:))
         let runtimeGeneratedProperties = FooObject._getProperties()
         XCTAssertNoDifference(macroGeneratedProperties, runtimeGeneratedProperties)
         assertInlineSnapshot(of: macroGeneratedProperties, as: .dump) {

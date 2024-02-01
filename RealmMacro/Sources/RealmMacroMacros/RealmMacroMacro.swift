@@ -132,7 +132,7 @@ extension RealmSchemaDiscoveryImpl: MemberMacro {
         }
 
         let rlmProperties = properties.map { (name, type, persistedAttr) in
-            let expr = ExprSyntax("RLMProperty(name: \(literal: name), type: \(raw: type).self, keyPath: \\\(className).\(raw: name))")
+            let expr = ExprSyntax("RealmSwift.Property(name: \(literal: name), type: \(raw: type).self, keyPath: \\\(className).\(raw: name))")
             var functionCall = expr.as(FunctionCallExprSyntax.self)!
 
             if let arguments = persistedAttr.arguments,
@@ -149,7 +149,7 @@ extension RealmSchemaDiscoveryImpl: MemberMacro {
             .joined(separator: "\n")
         return ["""
 
-        static var _realmProperties: [RLMProperty] {
+        static var _realmProperties: [RealmSwift.Property] {
             return [
         \(raw: arrSyntax)
             ]
