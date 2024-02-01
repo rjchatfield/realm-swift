@@ -21,7 +21,8 @@ import Realm
 import Realm.Private
 
 public protocol _RealmObjectSchemaDiscoverable {
-    static var _realmProperties: [RealmSwift.Property] { get }
+    /// Returning `nil` will fallback to default schema inference behaviour
+    static var _realmProperties: [RealmSwift.Property]? { get }
 }
 
 // A type which we can get the runtime schema information from
@@ -231,8 +232,9 @@ private func getLegacyProperties(_ object: ObjectBase, _ cls: ObjectBase.Type) -
 }
 
 private func getProperties(_ cls: RLMObjectBase.Type) -> [RLMProperty] {
-    if let cls = cls as? _RealmObjectSchemaDiscoverable.Type {
-        return cls._realmProperties.map(ObjectiveCSupport.convert(object:))
+    if let cls = cls as? _RealmObjectSchemaDiscoverable.Type,
+       let props = cls._realmProperties {
+        return props.map(ObjectiveCSupport.convert(object:))
     }
 
     // Check for any modern properties and only scan for legacy properties if

@@ -33,14 +33,14 @@ final class RealmMacroTests: XCTestCase {
                 var computed: String { "" }
                 func method() {}
 
-                @RealmSchemaDiscovery
+                //@RealmSchemaDiscovery
                 @objc(NestedObject)
                 class NestedObject: Object {
                     @Persisted(primaryKey: true) var id: String
                     @Persisted var name2: String
                 }
 
-                @RealmSchemaDiscovery
+                //@RealmSchemaDiscovery
                 @objc(NestedEmbeddedObject)
                 class NestedEmbeddedObject: EmbeddedObject {
                     @Persisted var name3: String
@@ -58,36 +58,32 @@ final class RealmMacroTests: XCTestCase {
 
                 var computed: String { "" }
                 func method() {}
+
+                //@RealmSchemaDiscovery
                 @objc(NestedObject)
                 class NestedObject: Object {
                     @Persisted(primaryKey: true) var id: String
                     @Persisted var name2: String
-
-                    static var _realmProperties: [RealmSwift.Property] {
-                        return [
-                    		RealmSwift.Property(name: "id", type: String.self, keyPath: \NestedObject.id, primaryKey: true),
-                    		RealmSwift.Property(name: "name2", type: String.self, keyPath: \NestedObject.name2),
-                        ]
-                    }
                 }
+
+                //@RealmSchemaDiscovery
                 @objc(NestedEmbeddedObject)
                 class NestedEmbeddedObject: EmbeddedObject {
                     @Persisted var name3: String
-
-                    static var _realmProperties: [RealmSwift.Property] {
-                        return [
-                    		RealmSwift.Property(name: "name3", type: String.self, keyPath: \NestedEmbeddedObject.name3),
-                        ]
-                    }
                 }
+            }
 
-                static var _realmProperties: [RealmSwift.Property] {
+            extension FooObject: RealmSwift._RealmObjectSchemaDiscoverable {
+                static var _realmProperties: [RealmSwift.Property]? {
+                    guard RealmMacroConstants.schemaDiscoveryEnabled else {
+                        return nil
+                    }
                     return [
-                		RealmSwift.Property(name: "id", type: String.self, keyPath: \FooObject.id, primaryKey: true),
-                		RealmSwift.Property(name: "name", type: String.self, keyPath: \FooObject.name),
-                		RealmSwift.Property(name: "key", type: String.self, keyPath: \FooObject.key, indexed: true),
-                		RealmSwift.Property(name: "nestedObject", type: NestedObject?.self, keyPath: \FooObject.nestedObject),
-                		RealmSwift.Property(name: "embeddedObjects", type: List<NestedObject>.self, keyPath: \FooObject.embeddedObjects),
+            			RealmSwift.Property(name: "id", type: String.self, keyPath: \FooObject.id, primaryKey: true),
+            			RealmSwift.Property(name: "name", type: String.self, keyPath: \FooObject.name),
+            			RealmSwift.Property(name: "key", type: String.self, keyPath: \FooObject.key, indexed: true),
+            			RealmSwift.Property(name: "nestedObject", type: NestedObject?.self, keyPath: \FooObject.nestedObject),
+            			RealmSwift.Property(name: "embeddedObjects", type: List<NestedObject>.self, keyPath: \FooObject.embeddedObjects),
                     ]
                 }
             }
@@ -97,8 +93,9 @@ final class RealmMacroTests: XCTestCase {
 
     func testEquality() {
 //        InlineSnapshotTesting.isRecording = true
-        
-        let macroGeneratedProperties = FooObject._realmProperties.map(ObjectiveCSupport.convert(object:))
+        RealmMacro.RealmMacroConstants.schemaDiscoveryEnabled = true
+
+        let macroGeneratedProperties = FooObject._realmProperties!.map(ObjectiveCSupport.convert(object:))
         let runtimeGeneratedProperties = FooObject._getProperties()
         XCTAssertNoDifference(macroGeneratedProperties, runtimeGeneratedProperties)
         assertInlineSnapshot(of: macroGeneratedProperties, as: .dump) {
@@ -222,6 +219,108 @@ final class RealmMacroTests: XCTestCase {
             """
         }
     }
+
+    func testDebugSchema() {
+        RealmMacro.RealmMacroConstants.schemaDiscoveryEnabled = false
+        let s1 = RLMSchema.shared()
+        assertInlineSnapshot(of: s1, as: .dump) {
+            """
+            - Schema {
+            	FooObject {
+            		id {
+            			type = string;
+            			columnName = id;
+            			indexed = YES;
+            			isPrimary = YES;
+            			array = NO;
+            			set = NO;
+            			dictionary = NO;
+            			optional = NO;
+            		}
+            		name {
+            			type = string;
+            			columnName = name;
+            			indexed = NO;
+            			isPrimary = NO;
+            			array = NO;
+            			set = NO;
+            			dictionary = NO;
+            			optional = NO;
+            		}
+            		key {
+            			type = string;
+            			columnName = key;
+            			indexed = YES;
+            			isPrimary = NO;
+            			array = NO;
+            			set = NO;
+            			dictionary = NO;
+            			optional = NO;
+            		}
+            		nestedObject {
+            			type = object;
+            			objectClassName = NestedObject;
+            			linkOriginPropertyName = (null);
+            			columnName = nestedObject;
+            			indexed = NO;
+            			isPrimary = NO;
+            			array = NO;
+            			set = NO;
+            			dictionary = NO;
+            			optional = YES;
+            		}
+            		embeddedObjects {
+            			type = object;
+            			objectClassName = NestedObject;
+            			linkOriginPropertyName = (null);
+            			columnName = embeddedObjects;
+            			indexed = NO;
+            			isPrimary = NO;
+            			array = YES;
+            			set = NO;
+            			dictionary = NO;
+            			optional = NO;
+            		}
+            	}
+            	NestedEmbeddedObject (embedded) {
+            		name3 {
+            			type = string;
+            			columnName = name3;
+            			indexed = NO;
+            			isPrimary = NO;
+            			array = NO;
+            			set = NO;
+            			dictionary = NO;
+            			optional = NO;
+            		}
+            	}
+            	NestedObject {
+            		id {
+            			type = string;
+            			columnName = id;
+            			indexed = YES;
+            			isPrimary = YES;
+            			array = NO;
+            			set = NO;
+            			dictionary = NO;
+            			optional = NO;
+            		}
+            		name2 {
+            			type = string;
+            			columnName = name2;
+            			indexed = NO;
+            			isPrimary = NO;
+            			array = NO;
+            			set = NO;
+            			dictionary = NO;
+            			optional = NO;
+            		}
+            	}
+            }
+
+            """
+        }
+    }
 }
 
 /*
@@ -238,14 +337,14 @@ final class FooObject: Object {
     var computed: String { "" }
     func method() {}
 
-    @RealmSchemaDiscovery
+//    @RealmSchemaDiscovery
     @objc(NestedObject)
     class NestedObject: Object {
         @Persisted(primaryKey: true) var id: String
         @Persisted var name2: String
     }
 
-    @RealmSchemaDiscovery
+//    @RealmSchemaDiscovery
     @objc(NestedEmbeddedObject)
     class NestedEmbeddedObject: EmbeddedObject {
         @Persisted var name3: String

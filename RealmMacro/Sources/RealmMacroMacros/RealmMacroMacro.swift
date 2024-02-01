@@ -86,24 +86,7 @@ extension RealmSchemaDiscoveryImpl: ExtensionMacro {
       conformingTo protocols: [TypeSyntax],
       in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
-        []
-    }
-}
-
-extension RealmSchemaDiscoveryImpl: MemberMacro {
-    static func expansion(
-        of node: AttributeSyntax,
-        providingConformancesOf declaration: some DeclGroupSyntax,
-        in context: some SwiftSyntaxMacros.MacroExpansionContext
-    ) throws -> [(TypeSyntax, GenericWhereClauseSyntax?)] {
-        return [(TypeSyntax("RealmSwift._RealmObjectSchemaDiscoverable"), nil)]
-    }
-
-    public static func expansion(
-        of node: AttributeSyntax,
-        providingMembersOf declaration: some DeclGroupSyntax,
-        in context: some MacroExpansionContext
-    ) throws -> [DeclSyntax] {
+//        []
         guard let declaration = declaration.as(ClassDeclSyntax.self) else { fatalError() }
         let className = declaration.name
         let properties = try declaration.memberBlock.members.compactMap { (decl) -> (String, String, AttributeSyntax)? in
@@ -145,18 +128,90 @@ extension RealmSchemaDiscoveryImpl: MemberMacro {
             return functionCall.as(ExprSyntax.self)!
         }
         let arrSyntax = rlmProperties
-            .map { "\t\t" + ArrayElementSyntax(expression: $0).description + "," }
+            .map { "\t\t\t" + ArrayElementSyntax(expression: $0).description + "," }
             .joined(separator: "\n")
-        return ["""
-
-        static var _realmProperties: [RealmSwift.Property] {
-            return [
+        let ext: DeclSyntax = """
+        extension \(type.trimmed): RealmSwift._RealmObjectSchemaDiscoverable {
+            static var _realmProperties: [RealmSwift.Property]? {
+                guard RealmMacroConstants.schemaDiscoveryEnabled else { return nil }
+                return [
         \(raw: arrSyntax)
-            ]
+                ]
+            }
         }
-        """]
+        """
+        return [ext.cast(ExtensionDeclSyntax.self)]
     }
 }
+
+//extension RealmSchemaDiscoveryImpl: MemberMacro {
+////    static func expansion(
+////        of node: AttributeSyntax,
+////        providingConformancesOf declaration: some DeclGroupSyntax,
+////        in context: some SwiftSyntaxMacros.MacroExpansionContext
+////    ) throws -> [(TypeSyntax, GenericWhereClauseSyntax?)] {
+////        return [(TypeSyntax("RealmSwift._RealmObjectSchemaDiscoverable"), nil)]
+////    }
+//
+//    public static func expansion(
+//        of node: AttributeSyntax,
+//        providingMembersOf declaration: some DeclGroupSyntax,
+//        in context: some MacroExpansionContext
+//    ) throws -> [DeclSyntax] {
+//        return []
+////        guard let declaration = declaration.as(ClassDeclSyntax.self) else { fatalError() }
+////        let className = declaration.name
+////        let properties = try declaration.memberBlock.members.compactMap { (decl) -> (String, String, AttributeSyntax)? in
+////            guard let property = decl.decl.as(VariableDeclSyntax.self), property.bindings.count == 1 else {
+////                return nil
+////            }
+////            let attributes = property.attributes
+////            let persistedAttr = attributes.compactMap { attr in
+////                if case let .attribute(attr) = attr {
+////                    if attr.attributeName.as(IdentifierTypeSyntax.self)?.name.text == "Persisted" {
+////                        return attr
+////                    }
+////                }
+////                return nil
+////            }.first
+////            guard let persistedAttr else { return nil }
+////
+////            let binding = property.bindings.first!
+////            guard let identifier = binding.pattern.as(IdentifierPatternSyntax.self) else { return nil }
+////            guard let typeAnnotation = binding.typeAnnotation else {
+////                throw RealmSchemaDiscoveryError.missingTypeAnnotation
+////            }
+////            let name = identifier.identifier.text
+////            let type = typeAnnotation.type.trimmedDescription
+////            return (name, type, persistedAttr)
+////        }
+////
+////        let rlmProperties = properties.map { (name, type, persistedAttr) in
+////            let expr = ExprSyntax("RealmSwift.Property(name: \(literal: name), type: \(raw: type).self, keyPath: \\\(className).\(raw: name))")
+////            var functionCall = expr.as(FunctionCallExprSyntax.self)!
+////
+////            if let arguments = persistedAttr.arguments,
+////               case let .argumentList(argList) = arguments {
+////                var argumentList = Array(functionCall.arguments)
+////                argumentList[argumentList.count - 1].trailingComma = ", "
+////                argumentList.append(contentsOf: argList)
+////                functionCall.arguments = LabeledExprListSyntax(argumentList)
+////            }
+////            return functionCall.as(ExprSyntax.self)!
+////        }
+////        let arrSyntax = rlmProperties
+////            .map { "\t\t" + ArrayElementSyntax(expression: $0).description + "," }
+////            .joined(separator: "\n")
+////        return ["""
+////
+////        static var _realmProperties: [RealmSwift.Property] {
+////            return [
+////        \(raw: arrSyntax)
+////            ]
+////        }
+////        """]
+//    }
+//}
 
 //func validatedProperty(_ property: some DeclSyntaxProtocol) -> VariableDeclSyntax? {
 //    guard let property = property.as(VariableDeclSyntax.self), property.bindings.count == 1 else {

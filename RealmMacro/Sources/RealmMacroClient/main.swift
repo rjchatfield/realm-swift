@@ -16,14 +16,14 @@ final class FooObject: Object {
     var computed: String { "" }
     func method() {}
 
-    @RealmSchemaDiscovery
+//    @RealmSchemaDiscovery
     @objc(NestedObject)
     class NestedObject: Object {
         @Persisted(primaryKey: true) var id: String
         @Persisted var name2: String
     }
 
-    @RealmSchemaDiscovery
+//    @RealmSchemaDiscovery
     @objc(NestedEmbeddedObject)
     class NestedEmbeddedObject: EmbeddedObject {
         @Persisted var name3: String

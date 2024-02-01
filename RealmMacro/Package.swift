@@ -32,7 +32,13 @@ let package = Package(
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax")
             ]
         ),
-        .target(name: "RealmMacro", dependencies: ["RealmMacroMacros"]),
+        .target(
+            name: "RealmMacro",
+            dependencies: [
+                "RealmMacroMacros",
+                .product(name: "RealmSwift", package: "realm-swift"),
+            ]
+        ),
         .executableTarget(
             name: "RealmMacroClient",
             dependencies: [
@@ -43,6 +49,7 @@ let package = Package(
         .testTarget(
             name: "RealmMacroTests",
             dependencies: [
+                "RealmMacro",
                 "RealmMacroMacros",
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),

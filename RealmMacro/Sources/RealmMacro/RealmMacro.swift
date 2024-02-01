@@ -1,6 +1,11 @@
-@attached(extension)
-@attached(member, names: named(_realmProperties))
+import RealmSwift
+
+@attached(extension, conformances: RealmSwift._RealmObjectSchemaDiscoverable, names: named(_realmProperties))
 public macro RealmSchemaDiscovery() = #externalMacro(module: "RealmMacroMacros", type: "RealmSchemaDiscoveryImpl")
+
+public enum RealmMacroConstants {
+    public static var schemaDiscoveryEnabled = true
+}
 
 //@attached(conformance)
 //@attached(member, names: named(_realmProperties), named(_realmUnmanagedStorage))
