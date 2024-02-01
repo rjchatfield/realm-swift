@@ -23,7 +23,7 @@ final class RealmMacroTests: XCTestCase {
         assertMacro {
             """
             @RealmSchemaDiscovery
-            final class FooObject: Object {
+            public final class FooObject: Object {
                 @Persisted(primaryKey: true) var id: String
                 @Persisted var name: String
                 @Persisted(indexed: true) var key: String
@@ -49,7 +49,7 @@ final class RealmMacroTests: XCTestCase {
             """
         } expansion: {
             #"""
-            final class FooObject: Object {
+            public final class FooObject: Object {
                 @Persisted(primaryKey: true) var id: String
                 @Persisted var name: String
                 @Persisted(indexed: true) var key: String
@@ -74,7 +74,7 @@ final class RealmMacroTests: XCTestCase {
             }
 
             extension FooObject: RealmSwift._RealmObjectSchemaDiscoverable {
-                static var _realmProperties: [RealmSwift.Property]? {
+                public static var _realmProperties: [RealmSwift.Property]? {
                     guard RealmMacroConstants.schemaDiscoveryEnabled else {
                         return nil
                     }

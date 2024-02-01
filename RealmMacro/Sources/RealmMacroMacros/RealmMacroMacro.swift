@@ -86,8 +86,9 @@ extension RealmSchemaDiscoveryImpl: ExtensionMacro {
       conformingTo protocols: [TypeSyntax],
       in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
-//        []
+        //        []
         guard let declaration = declaration.as(ClassDeclSyntax.self) else { fatalError() }
+        let accessModifier = if declaration.modifiers.contains(where: { $0.name.tokenKind == .keyword(.public) }) { "public " } else { "" }
         let className = declaration.name
         let properties = try declaration.memberBlock.members.compactMap { (decl) -> (String, String, AttributeSyntax)? in
             guard let property = decl.decl.as(VariableDeclSyntax.self), property.bindings.count == 1 else {
@@ -130,9 +131,10 @@ extension RealmSchemaDiscoveryImpl: ExtensionMacro {
         let arrSyntax = rlmProperties
             .map { "\t\t\t" + ArrayElementSyntax(expression: $0).description + "," }
             .joined(separator: "\n")
+
         let ext: DeclSyntax = """
         extension \(type.trimmed): RealmSwift._RealmObjectSchemaDiscoverable {
-            static var _realmProperties: [RealmSwift.Property]? {
+            \(raw: accessModifier)static var _realmProperties: [RealmSwift.Property]? {
                 guard RealmMacroConstants.schemaDiscoveryEnabled else { return nil }
                 return [
         \(raw: arrSyntax)
