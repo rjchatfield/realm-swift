@@ -101,45 +101,22 @@ extension RealmSchemaDiscoveryImpl: ExtensionMacro {
     ) throws -> DeclSyntax {
         let accessModifier = if declaration.modifiers.contains(where: { $0.name.tokenKind == .keyword(.public) }) { "public " } else { "" }
         let className = declaration.name
-        let properties = try declaration.memberBlock.members.compactMap { (decl) -> (String, String, AttributeSyntax)? in
-            guard let property = decl.decl.as(VariableDeclSyntax.self), property.bindings.count == 1 else {
-                return nil
-            }
-            let attributes = property.attributes
-            let persistedAttr = attributes.compactMap { attr in
-                if case let .attribute(attr) = attr {
-                    if attr.attributeName.as(IdentifierTypeSyntax.self)?.name.text == "Persisted" {
-                        return attr
-                    }
+        let properties = try declaration.memberBlock.members
+            .compactMap { try $0.propertyDetails }
+            .map { (name, type, persistedAttr) in
+                let expr = ExprSyntax("RealmSwift.Property(name: \(literal: name), type: \(raw: type).self, keyPath: \\\(className).\(raw: name))")
+                var functionCall = expr.as(FunctionCallExprSyntax.self)!
+
+                if let arguments = persistedAttr.arguments,
+                   case let .argumentList(argList) = arguments {
+                    var argumentList = Array(functionCall.arguments)
+                    argumentList[argumentList.count - 1].trailingComma = ", "
+                    argumentList.append(contentsOf: argList)
+                    functionCall.arguments = LabeledExprListSyntax(argumentList)
                 }
-                return nil
-            }.first
-            guard let persistedAttr else { return nil }
-
-            let binding = property.bindings.first!
-            guard let identifier = binding.pattern.as(IdentifierPatternSyntax.self) else { return nil }
-            guard let typeAnnotation = binding.typeAnnotation else {
-                throw RealmSchemaDiscoveryError.missingTypeAnnotation
+                return functionCall.as(ExprSyntax.self)!
             }
-            let name = identifier.identifier.text
-            let type = typeAnnotation.type.trimmedDescription
-            return (name, type, persistedAttr)
-        }
-
-        let rlmProperties = properties.map { (name, type, persistedAttr) in
-            let expr = ExprSyntax("RealmSwift.Property(name: \(literal: name), type: \(raw: type).self, keyPath: \\\(className).\(raw: name))")
-            var functionCall = expr.as(FunctionCallExprSyntax.self)!
-
-            if let arguments = persistedAttr.arguments,
-               case let .argumentList(argList) = arguments {
-                var argumentList = Array(functionCall.arguments)
-                argumentList[argumentList.count - 1].trailingComma = ", "
-                argumentList.append(contentsOf: argList)
-                functionCall.arguments = LabeledExprListSyntax(argumentList)
-            }
-            return functionCall.as(ExprSyntax.self)!
-        }
-        let arrSyntax = rlmProperties
+        let formattedArrayElements = properties
             .map { "\t\t\t" + ArrayElementSyntax(expression: $0).description + "," }
             .joined(separator: "\n")
 
@@ -148,11 +125,44 @@ extension RealmSchemaDiscoveryImpl: ExtensionMacro {
             \(raw: accessModifier)static var _realmProperties: [RealmSwift.Property]? {
                 guard RealmMacroConstants.schemaDiscoveryEnabled else { return nil }
                 return [
-        \(raw: arrSyntax)
+        \(raw: formattedArrayElements)
                 ]
             }
         }
         """
+    }
+}
+
+private extension MemberBlockItemListSyntax.Element {
+    var propertyDetails: (name: String, type: String, attr: AttributeSyntax)? {
+        get throws {
+            guard let property = decl.as(VariableDeclSyntax.self),
+                  property.bindings.count == 1,
+                  let binding = property.bindings.first,
+                  let persistedAttr = property.attributes.lazy.compactMap(\.attribute).first(where: \.isRealmPersistedPropertyWrapper),
+                  let identifier = binding.pattern.as(IdentifierPatternSyntax.self)
+            else { return nil }
+            guard let typeAnnotation = binding.typeAnnotation 
+            else { throw RealmSchemaDiscoveryError.missingTypeAnnotation }
+            let name = identifier.identifier.text
+            let type = typeAnnotation.type.trimmedDescription
+            return (name, type, persistedAttr)
+        }
+    }
+}
+private extension AttributeListSyntax.Element {
+    var attribute: AttributeSyntax? {
+        switch self {
+        case .attribute(let attributeSyntax):
+            return attributeSyntax
+        case .ifConfigDecl:
+            return nil
+        }
+    }
+}
+private extension AttributeSyntax {
+    var isRealmPersistedPropertyWrapper: Bool {
+        attributeName.as(IdentifierTypeSyntax.self)?.name.text == "Persisted"
     }
 }
 
