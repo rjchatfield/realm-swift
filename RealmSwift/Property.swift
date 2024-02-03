@@ -104,44 +104,64 @@ public extension Property {
         self.rlmProperty = rlmProperty
     }
 
-    init<T: ObjectBase, U: _Persistable>(
+//    init<T: ObjectBase, U: _Persistable>(
+//        name: String,
+//        keyPath: KeyPath<T, U>,
+//        indexed: Bool = false,
+//        primaryKey: Bool = false,
+//        originProperty: String? = nil
+//    ) {
+//        let rlmProperty = RLMProperty()
+//        rlmProperty.name = name
+//        rlmProperty.type = U._rlmType
+//        rlmProperty.optional = U._rlmOptional
+//        rlmProperty.indexed = primaryKey || indexed
+//        rlmProperty.isPrimary = primaryKey
+//        rlmProperty.linkOriginPropertyName = originProperty
+//        U._rlmPopulateProperty(rlmProperty)
+//        U._rlmSetAccessor(rlmProperty)
+//        rlmProperty.swiftIvar = ivar_getOffset(class_getInstanceVariable(T.self, "_$" + name)!)
+//        self.rlmProperty = rlmProperty
+//    }
+    init<O: ObjectBase, V: _Persistable>(
         name: String,
-        keyPath: KeyPath<T, U>,
+        objectType _: O.Type,
+        valueType _: V.Type,
         indexed: Bool = false,
         primaryKey: Bool = false,
         originProperty: String? = nil
     ) {
         let rlmProperty = RLMProperty()
         rlmProperty.name = name
-        rlmProperty.type = U._rlmType
-        rlmProperty.optional = U._rlmOptional
+        rlmProperty.type = V._rlmType
+        rlmProperty.optional = V._rlmOptional
         rlmProperty.indexed = primaryKey || indexed
         rlmProperty.isPrimary = primaryKey
         rlmProperty.linkOriginPropertyName = originProperty
-        U._rlmPopulateProperty(rlmProperty)
-        U._rlmSetAccessor(rlmProperty)
-        rlmProperty.swiftIvar = ivar_getOffset(class_getInstanceVariable(T.self, "_$" + name)!)
+        V._rlmPopulateProperty(rlmProperty)
+        V._rlmSetAccessor(rlmProperty)
+        rlmProperty.swiftIvar = ivar_getOffset(class_getInstanceVariable(O.self, "_" + name)!)
         self.rlmProperty = rlmProperty
     }
 
-    init<T: ObjectBase, U: _Persistable>(
-        name: String,
-        index: Int,
-        keyPath: KeyPath<T, U>,
-        indexed: Bool = false,
-        primaryKey: Bool = false,
-        originProperty: String? = nil
-    ) {
-        let rlmProperty = RLMProperty()
-        rlmProperty.name = name
-        rlmProperty.type = U._rlmType
-        rlmProperty.optional = U._rlmOptional
-        rlmProperty.indexed = primaryKey || indexed
-        rlmProperty.isPrimary = primaryKey
-        rlmProperty.linkOriginPropertyName = originProperty
-        U._rlmPopulateProperty(rlmProperty)
-        U._rlmSetAccessor(rlmProperty)
-        rlmProperty.swiftIvar = -index
-        self.rlmProperty = rlmProperty
-    }
+//    init<T: ObjectBase, U: _Persistable>(
+//        name: String,
+//        index: Int,
+//        keyPath: KeyPath<T, U>,
+//        indexed: Bool = false,
+//        primaryKey: Bool = false,
+//        originProperty: String? = nil
+//    ) {
+//        let rlmProperty = RLMProperty()
+//        rlmProperty.name = name
+//        rlmProperty.type = U._rlmType
+//        rlmProperty.optional = U._rlmOptional
+//        rlmProperty.indexed = primaryKey || indexed
+//        rlmProperty.isPrimary = primaryKey
+//        rlmProperty.linkOriginPropertyName = originProperty
+//        U._rlmPopulateProperty(rlmProperty)
+//        U._rlmSetAccessor(rlmProperty)
+//        rlmProperty.swiftIvar = -index
+//        self.rlmProperty = rlmProperty
+//    }
 }

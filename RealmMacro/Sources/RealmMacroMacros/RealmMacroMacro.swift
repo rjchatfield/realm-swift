@@ -79,32 +79,77 @@ enum RealmSchemaDiscoveryError: CustomStringConvertible, Error {
     }
 }
 
-public struct RealmSchemaDiscoveryImpl {}
+public struct RealmSchemaDiscoveryImpl {
+
+}
+
+extension RealmSchemaDiscoveryImpl: MemberAttributeMacro {
+    public static func expansion(
+        of node: AttributeSyntax,
+        attachedTo declaration: some DeclGroupSyntax,
+        providingAttributesFor member: some DeclSyntaxProtocol,
+        in context: some MacroExpansionContext
+    ) throws -> [AttributeSyntax] {
+        guard let declaration = declaration.as(ClassDeclSyntax.self) else {
+            throw RealmSchemaDiscoveryError.notAClass
+        }
+        guard let nestedClass = member.as(ClassDeclSyntax.self) else {
+            print("NOPE:", member)
+            return []
+//            return [AttributeSyntax("@IgnoreThisProp")]
+        }
+        let attr = AttributeSyntax(attributeName: TypeSyntax("RealmSchemaDiscovery"))
+//        if nestedClass.attributes.contains(where: { $0.attribute?.attributeName.description == "RealmSchemaDiscovery" }) {
+//            throw RealmSchemaDiscoveryError.notAClass // TODO: different error
+//        }
+        print("NESTED_CLASS:", nestedClass)
+        return [
+//            AttributeSyntax("@WrapperClassName(\"\(declaration.name)1\")"),
+//            AttributeSyntax("@WrapperClassName(\"\(declaration.name)2\")"),
+        ]
+    }
+}
 
 extension RealmSchemaDiscoveryImpl: ExtensionMacro {
     public static func expansion(
       of node: AttributeSyntax,
       attachedTo declaration: some DeclGroupSyntax,
-      providingExtensionsOf type: some TypeSyntaxProtocol,
+      providingExtensionsOf typeSyn: some TypeSyntaxProtocol,
       conformingTo protocols: [TypeSyntax],
       in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
         guard let declaration = declaration.as(ClassDeclSyntax.self) else {
             throw RealmSchemaDiscoveryError.notAClass
         }
-        let ext = try conformanceExpansion(declaration: declaration)
-        return [ext.cast(ExtensionDeclSyntax.self)]
+        print(declaration)
+        return try recursiveConformanceExpansion(declaration: declaration, nestedTypeNames: [])
+            .compactMap { $0.as(ExtensionDeclSyntax.self) }
+    }
+
+    private static func recursiveConformanceExpansion(
+        declaration: ClassDeclSyntax,
+        nestedTypeNames: [TokenSyntax]
+    ) throws -> [DeclSyntax] {
+        let selfDeclSyntax = try conformanceExpansion(declaration: declaration, nestedTypeNames: nestedTypeNames)
+//        let nestedTypeNames = nestedTypeNames + [declaration.name]
+//        let nestedClasses = try declaration.memberBlock.members
+//            .compactMap({ $0.as(MemberBlockItemSyntax.self)?.decl.as(ClassDeclSyntax.self) })
+//            .flatMap { try recursiveConformanceExpansion(declaration: $0, nestedTypeNames: nestedTypeNames) }
+        return [selfDeclSyntax]// + nestedClasses
     }
 
     private static func conformanceExpansion(
-        declaration: ClassDeclSyntax
+        declaration: ClassDeclSyntax,
+        nestedTypeNames: [TokenSyntax]
     ) throws -> DeclSyntax {
         let accessModifier = if declaration.modifiers.contains(where: { $0.name.tokenKind == .keyword(.public) }) { "public " } else { "" }
-        let className = declaration.name
+        let shortClassName = declaration.name
+//        let keyPathPrefix = (self.nestedTypeNames + [declaration.name.description]).joined(separator: ".")
         let properties = try declaration.memberBlock.members
             .compactMap { try $0.propertyDetails }
             .map { (name, type, persistedAttr) in
-                let expr = ExprSyntax("RealmSwift.Property(name: \(literal: name), type: \(raw: type).self, keyPath: \\\(className).\(raw: name))")
+//                let expr = ExprSyntax("RealmSwift.Property(name: \(literal: name), type: \(raw: type).self, keyPath: \\\(shortClassName).\(raw: name))")
+                let expr = ExprSyntax("RealmSwift.Property(name: \(literal: name), objectType: Self.self, valueType: \(raw: type).self)")
                 var functionCall = expr.as(FunctionCallExprSyntax.self)!
 
                 if let arguments = persistedAttr.arguments,
@@ -116,12 +161,12 @@ extension RealmSchemaDiscoveryImpl: ExtensionMacro {
                 }
                 return functionCall.as(ExprSyntax.self)!
             }
+        let fullClassName = (nestedTypeNames + [declaration.name]).map(\.description).joined(separator: ".")
         let formattedArrayElements = properties
             .map { "\t\t\t" + ArrayElementSyntax(expression: $0).description + "," }
             .joined(separator: "\n")
-
         return """
-        extension \(declaration.name): RealmSwift._RealmObjectSchemaDiscoverable {
+        extension \(raw: fullClassName): RealmSwift._RealmObjectSchemaDiscoverable {
             \(raw: accessModifier)static var _realmProperties: [RealmSwift.Property]? {
                 guard RealmMacroConstants.schemaDiscoveryEnabled else { return nil }
                 return [

@@ -1,7 +1,8 @@
 import RealmSwift
 
+@attached(memberAttribute)
 @attached(extension, conformances: RealmSwift._RealmObjectSchemaDiscoverable, names: named(_realmProperties))
-public macro RealmSchemaDiscovery() = #externalMacro(module: "RealmMacroMacros", type: "RealmSchemaDiscoveryImpl")
+public macro RealmSchemaDiscovery(nestedTypeNames: [String] = []) = #externalMacro(module: "RealmMacroMacros", type: "RealmSchemaDiscoveryImpl")
 
 public enum RealmMacroConstants {
     public static var schemaDiscoveryEnabled = true
