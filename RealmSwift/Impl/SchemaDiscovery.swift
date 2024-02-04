@@ -67,54 +67,6 @@ internal extension RLMProperty {
     }
 }
 
-//public extension RLMProperty {
-//    convenience init<T: ObjectBase, U: _Persistable>(name: String, type: _RealmSchemaDiscoverable.Type, keyPath: KeyPath<T, U>, indexed: Bool = false, primaryKey: Bool = false, originProperty: String? = nil) {
-//        self.init()
-//        self.name = name
-//        self.type = type._rlmType
-//        self.optional = type._rlmOptional
-//        self.indexed = indexed || primaryKey
-//        self.isPrimary = primaryKey
-//        self.linkOriginPropertyName = originProperty
-//        type._rlmPopulateProperty(self)
-//        U._rlmSetAccessor(self)
-//        self.swiftIvar = ivar_getOffset(class_getInstanceVariable(T.self, "_" + name)!)
-//    }
-//
-//    convenience init<T: ObjectBase, U: _Persistable>(name: String, keyPath: KeyPath<T, U>, indexed: Bool = false, primaryKey: Bool = false, originProperty: String? = nil) {
-//        self.init()
-//        self.name = name
-//        self.type = U._rlmType
-//        self.optional = U._rlmOptional
-//        self.indexed = indexed || primaryKey
-//        self.isPrimary = primaryKey
-//        self.linkOriginPropertyName = originProperty
-//        U._rlmPopulateProperty(self)
-//        U._rlmSetAccessor(self)
-//        self.swiftIvar = ivar_getOffset(class_getInstanceVariable(T.self, "_$" + name)!)
-//    }
-//
-//    convenience init<T: ObjectBase, U: _Persistable>(name: String, index: Int, keyPath: KeyPath<T, U>, indexed: Bool = false, primaryKey: Bool = false, originProperty: String? = nil) {
-//        self.init()
-//        self.name = name
-//        self.type = U._rlmType
-//        self.optional = U._rlmOptional
-//        self.indexed = indexed || primaryKey
-//        self.isPrimary = primaryKey
-//        self.linkOriginPropertyName = originProperty
-//        U._rlmPopulateProperty(self)
-//        U._rlmSetAccessor(self)
-//        self.swiftIvar = -index
-//    }
-//}
-
-public func _getProperty<T: _Persistable>(_ obj: ObjectBase, _ index: Int) -> T {
-    T._rlmGetProperty(obj, PropertyKey(index))
-}
-public func _setProperty<T: _Persistable>(_ obj: ObjectBase, _ index: Int, _ value: T) {
-    T._rlmSetProperty(obj, PropertyKey(index), value)
-}
-
 private func getModernProperties(_ object: ObjectBase) -> [RLMProperty] {
     let columnNames: [String: String] = type(of: object).propertiesMapping()
     return Mirror(reflecting: object).children.compactMap { prop in

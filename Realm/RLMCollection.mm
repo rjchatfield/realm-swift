@@ -276,7 +276,9 @@ NSArray *RLMCollectionValueForKey(Collection& collection, NSString *key, RLMClas
     auto swiftAccessor = prop.swiftAccessor;
     for (size_t i = 0; i < count; i++) {
         accessor->_row = collection.get(i);
-        [swiftAccessor initialize:prop on:accessor];
+        if (swiftAccessor) {
+            [swiftAccessor initialize:prop on:accessor];
+        }
         [array addObject:[accessor valueForKey:key] ?: NSNull.null];
     }
     return array;

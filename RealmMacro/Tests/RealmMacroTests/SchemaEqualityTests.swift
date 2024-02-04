@@ -305,6 +305,8 @@ final class SchemaEqualityTests: XCTestCase {
     }
 }
 
+// MARK: -
+
 /*
  Example object that ensures all generated code is valid
  */
