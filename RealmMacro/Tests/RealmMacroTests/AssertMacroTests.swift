@@ -356,6 +356,30 @@ final class AssertMacroTests: XCTestCase {
         }
     }
 
+    func testSnapshotMissingAnnotation() {
+        assertMacro {
+            """
+            @CompileTimeSchema
+            class FooObject: Object {
+                @Persisted var value1: String
+                @Persisted var value2: String = ""
+                @Persisted var value3 = ""
+            }
+            """
+        } diagnostics: {
+            """
+            @CompileTimeSchema
+            class FooObject: Object {
+                @Persisted var value1: String
+                @Persisted var value2: String = ""
+                @Persisted var value3 = ""
+                               ┬──────────
+                               ╰─ 🛑 @CompileTimeSchema requires an explicit type annotation for all @Persisted properties and cannot infer the type from the default value
+            }
+            """
+        }
+    }
+
     func testNotARealmObject() {
         assertMacro {
             """
