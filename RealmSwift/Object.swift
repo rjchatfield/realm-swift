@@ -137,6 +137,11 @@ extension Object: _RealmCollectionValueInsideOptional {
         return ObjectUtil.getSwiftProperties(self)
     }
 
+    /// Exposed for Macros
+    open override class func _customRealmProperties() -> [RLMProperty]? {
+        return nil
+    }
+
     // MARK: Object Customization
 
     /**

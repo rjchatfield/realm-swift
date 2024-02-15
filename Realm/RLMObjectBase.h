@@ -17,6 +17,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #import <Realm/RLMConstants.h>
+#import "RLMProperty.h"
 
 RLM_HEADER_AUDIT_BEGIN(nullability, sendability)
 
@@ -32,6 +33,7 @@ RLM_HEADER_AUDIT_BEGIN(nullability, sendability)
 // Returns whether the class is included in the default set of classes managed by a Realm.
 + (BOOL)shouldIncludeInDefaultSchema;
 
++ (nullable NSArray<RLMProperty *> *)_customRealmProperties;
 + (nullable NSString *)_realmObjectName;
 + (nullable NSDictionary<NSString *, NSString *> *)_realmColumnNames;
 

@@ -79,17 +79,14 @@ import Realm
         primaryKey: Bool = false,
         originProperty: String? = nil
     ) {
-        let rlmProperty = RLMProperty()
-        rlmProperty.name = name
-        rlmProperty.type = V._rlmType
-        rlmProperty.optional = V._rlmOptional
-        rlmProperty.indexed = primaryKey || indexed
-        rlmProperty.isPrimary = primaryKey
-        rlmProperty.linkOriginPropertyName = originProperty
-        V._rlmPopulateProperty(rlmProperty)
-        V._rlmSetAccessor(rlmProperty)
-        rlmProperty.swiftIvar = ivar_getOffset(class_getInstanceVariable(O.self, "_" + name)!)
-        self.rlmProperty = rlmProperty
+        self.rlmProperty = RLMProperty(
+            name: name,
+            objectType: O.self,
+            valueType: V.self,
+            indexed: indexed,
+            primaryKey: primaryKey,
+            originProperty: originProperty
+        )
     }
 }
 

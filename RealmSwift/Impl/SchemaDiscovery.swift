@@ -67,6 +67,29 @@ internal extension RLMProperty {
     }
 }
 
+extension RLMProperty {
+    /// Exposed for Macros
+    public convenience init<O: ObjectBase, V: _Persistable>(
+        name: String,
+        objectType _: O.Type,
+        valueType _: V.Type,
+        indexed: Bool = false,
+        primaryKey: Bool = false,
+        originProperty: String? = nil
+    ) {
+        self.init()
+        self.name = name
+        self.type = V._rlmType
+        self.optional = V._rlmOptional
+        self.indexed = primaryKey || indexed
+        self.isPrimary = primaryKey
+        self.linkOriginPropertyName = originProperty
+        V._rlmPopulateProperty(self)
+        V._rlmSetAccessor(self)
+        self.swiftIvar = ivar_getOffset(class_getInstanceVariable(O.self, "_" + name)!)
+    }
+}
+
 private func getModernProperties(_ object: ObjectBase) -> [RLMProperty] {
     let columnNames: [String: String] = type(of: object).propertiesMapping()
     return Mirror(reflecting: object).children.compactMap { prop in
@@ -184,11 +207,18 @@ private func getLegacyProperties(_ object: ObjectBase, _ cls: ObjectBase.Type) -
 }
 
 private func getProperties(_ cls: RLMObjectBase.Type) -> [RLMProperty] {
+    // Macro 1...
+    if let props = cls._customRealmProperties() {
+        return props
+    }
+
+    // Macro 2...
     if let cls = cls as? _RealmObjectSchemaDiscoverable.Type,
        let props = cls._realmProperties {
         return props.map(ObjectiveCSupport.convert(object:))
     }
 
+    // No macro...
     // Check for any modern properties and only scan for legacy properties if
     // none are found.
     let object = cls.init()
