@@ -69,25 +69,6 @@ import Realm
     internal init(_ rlmProperty: RLMProperty) {
         self.rlmProperty = rlmProperty
     }
-
-    /// Exposed for Macros
-    public init<O: ObjectBase, V: _Persistable>(
-        name: String,
-        objectType _: O.Type,
-        valueType _: V.Type,
-        indexed: Bool = false,
-        primaryKey: Bool = false,
-        originProperty: String? = nil
-    ) {
-        self.rlmProperty = RLMProperty(
-            name: name,
-            objectType: O.self,
-            valueType: V.self,
-            indexed: indexed,
-            primaryKey: primaryKey,
-            originProperty: originProperty
-        )
-    }
 }
 
 // MARK: Equatable

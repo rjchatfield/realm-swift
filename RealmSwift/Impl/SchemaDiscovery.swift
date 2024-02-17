@@ -20,11 +20,6 @@ import Foundation
 import Realm
 import Realm.Private
 
-public protocol _RealmObjectSchemaDiscoverable {
-    /// Returning `nil` will fallback to default schema inference behaviour
-    static var _realmProperties: [RealmSwift.Property]? { get }
-}
-
 // A type which we can get the runtime schema information from
 public protocol _RealmSchemaDiscoverable {
     // The Realm property type associated with this type
@@ -52,8 +47,8 @@ extension SchemaDiscoverable {
     public static func _rlmPopulateProperty(_ prop: RLMProperty) { }
 }
 
-internal extension RLMProperty {
-    convenience init(name: String, value: _RealmSchemaDiscoverable) {
+extension RLMProperty {
+    internal convenience init(name: String, value: _RealmSchemaDiscoverable) {
         let valueType = Swift.type(of: value)
         self.init()
         self.name = name
@@ -65,10 +60,9 @@ internal extension RLMProperty {
             self.updateAccessors()
         }
     }
-}
 
-extension RLMProperty {
-    /// Exposed for Macros
+    /// Exposed for Macros.
+    /// Important: Keep args in same order & default value as `@Persisted` property wrapper
     public convenience init<O: ObjectBase, V: _Persistable>(
         name: String,
         objectType _: O.Type,
@@ -207,18 +201,9 @@ private func getLegacyProperties(_ object: ObjectBase, _ cls: ObjectBase.Type) -
 }
 
 private func getProperties(_ cls: RLMObjectBase.Type) -> [RLMProperty] {
-    // Macro 1...
     if let props = cls._customRealmProperties() {
         return props
     }
-
-    // Macro 2...
-    if let cls = cls as? _RealmObjectSchemaDiscoverable.Type,
-       let props = cls._realmProperties {
-        return props.map(ObjectiveCSupport.convert(object:))
-    }
-
-    // No macro...
     // Check for any modern properties and only scan for legacy properties if
     // none are found.
     let object = cls.init()
